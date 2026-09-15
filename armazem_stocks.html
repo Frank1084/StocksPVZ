@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stocks - Armazém</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f1b2d">
+<link rel="icon" href="pwa-assets/icon-192.png">
+<link rel="apple-touch-icon" href="pwa-assets/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stocks">
+<style>
+  :root {
+    --bg: #0f1b2d;
+    --panel: #16243b;
+    --panel-light: #1c2f4a;
+    --accent: #ff8c1a;
+    --accent-dark: #cc6f00;
+    --text: #e8edf5;
+    --muted: #8fa1bb;
+    --border: #2a3d5c;
+    --row-alt: #182742;
+    --ok: #3ddc84;
+    --warn: #ff5c5c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .topbar {
+    background: linear-gradient(135deg, var(--panel) 0%, #101d33 100%);
+    padding: 18px 20px 14px 20px;
+    border-bottom: 3px solid var(--accent);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .topbar h1 {
+    margin: 0 0 2px 0;
+    font-size: 1.3rem;
+    letter-spacing: 0.5px;
+  }
+  .topbar h1 span { color: var(--accent); }
+  .topbar p {
+    margin: 0 0 14px 0;
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+  .search-bar {
+    display: grid;
+    grid-template-columns: 1fr 2fr auto;
+    gap: 8px;
+  }
+  .search-bar label {
+    display: block;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  input[type="text"] {
+    flex: 1;
+    padding: 11px 14px;
+    font-size: 0.95rem;
+    background: var(--panel-light);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    outline: none;
+  }
+  input[type="text"]::placeholder { color: var(--muted); }
+  input[type="text"]:focus { border-color: var(--accent); }
+  button#clearBtn {
+    align-self: end;
+    padding: 11px 18px;
+    font-size: 0.88rem;
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  button#clearBtn:hover { background: rgba(255,140,26,0.12); }
+
+  .filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .chip {
+    font-size: 0.72rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    background: var(--panel-light);
+    user-select: none;
+  }
+  .chip.active {
+    background: var(--accent);
+    color: #1a1200;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+
+  .content {
+    padding: 14px 20px 40px 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .status-line {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin: 10px 2px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+  }
+  thead th {
+    text-align: left;
+    padding: 10px 10px;
+    background: var(--panel);
+    color: var(--accent);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: sticky;
+    top: 108px;
+  }
+  tbody tr {
+    background: var(--panel-light);
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody td {
+    padding: 9px 10px;
+    vertical-align: middle;
+  }
+  .col-ordem {
+    font-weight: 700;
+    color: var(--accent);
+    width: 50px;
+  }
+  .col-familia {
+    color: var(--muted);
+    font-size: 0.78rem;
+    width: 70px;
+  }
+  .col-un {
+    text-align: center;
+    width: 55px;
+  }
+  .un-tag {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.72rem;
+    color: var(--text);
+  }
+  .col-stock {
+    text-align: right;
+    width: 80px;
+    font-weight: 700;
+  }
+  .stock-ok { color: var(--ok); }
+  .stock-warn { color: var(--warn); }
+
+  .empty-state {
+    text-align: center;
+    color: var(--muted);
+    padding: 50px 20px;
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 600px) {
+    .col-familia { display: none; }
+    thead th { top: 132px; }
+    table { font-size: 0.8rem; }
+    .search-bar { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>Armazém <span>/ Stocks</span></h1>
+    <p>Pesquisa por código, nome do material ou clicando numa família</p>
+    <div class="search-bar">
+      <div>
+        <label for="codigoInput">Código</label>
+        <input type="text" id="codigoInput" placeholder="Ex: 201" autocomplete="off" inputmode="numeric">
+      </div>
+      <div>
+        <label for="nomeInput">Nome do material</label>
+        <input type="text" id="nomeInput" placeholder="Ex: parafuso" autocomplete="off">
+      </div>
+      <button id="clearBtn">Limpar</button>
+    </div>
+    <div class="filters" id="filterChips"></div>
+  </div>
+
+  <div class="content">
+    <div class="status-line" id="statusLine"></div>
+    <table id="resultsTable" style="display:none;">
+      <thead>
+        <tr>
+          <th class="col-ordem">Cód.</th>
+          <th>Material</th>
+          <th class="col-familia">Família</th>
+          <th class="col-un">Un.</th>
+          <th class="col-stock">Stock</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState">A carregar dados...</div>
+  </div>
+
+<script>
+const codigoInput = document.getElementById('codigoInput');
+const nomeInput = document.getElementById('nomeInput');
+const clearBtn = document.getElementById('clearBtn');
+const tbody = document.getElementById('tbody');
+const table = document.getElementById('resultsTable');
+const emptyState = document.getElementById('emptyState');
+const statusLine = document.getElementById('statusLine');
+const filterChips = document.getElementById('filterChips');
+
+let DATA = [];
+let FAMILIAS = [];
+let activeFamilia = null;
+
+// Parser CSV simples com suporte a campos entre aspas (vírgulas e aspas dentro do texto)
+function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else { inQuotes = false; }
+      } else {
+        field += c;
+      }
+    } else {
+      if (c === '"') { inQuotes = true; }
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\r') { /* ignore */ }
+      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else { field += c; }
+    }
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  return rows.filter(r => r.length > 1 || r[0] !== '');
+}
+
+async function loadData() {
+  try {
+    const res = await fetch('stock_data.csv', { cache: 'no-store' });
+    const text = await res.text();
+    const rows = parseCSV(text);
+    rows.shift(); // remove cabeçalho
+    DATA = rows.map(r => ({
+      ordem: r[0],
+      familia: r[1],
+      material: r[2],
+      num: r[3],
+      stock: isNaN(parseFloat(r[4])) ? r[4] : parseFloat(r[4]),
+      ne: r[5],
+      un: r[6]
+    }));
+    initApp();
+  } catch (err) {
+    emptyState.textContent = 'Não foi possível carregar os dados (stock_data.csv). Verifica se o ficheiro está na mesma pasta.';
+  }
+}
+
+function renderChips() {
+  filterChips.innerHTML = FAMILIAS.map(f =>
+    `<span class="chip" data-fam="${f}">${f}</span>`
+  ).join('');
+  filterChips.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const fam = chip.dataset.fam;
+      activeFamilia = (activeFamilia === fam) ? null : fam;
+      filterChips.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      if (activeFamilia) chip.classList.add('active');
+      doSearch();
+    });
+  });
+}
+
+function normalize(str) {
+  return (str || '').toString()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().trim();
+}
+
+function render(items) {
+  if (!items.length) {
+    table.style.display = 'none';
+    emptyState.style.display = 'block';
+    emptyState.textContent = 'Nenhum resultado encontrado.';
+    statusLine.textContent = '';
+    return;
+  }
+  emptyState.style.display = 'none';
+  table.style.display = 'table';
+  statusLine.textContent = items.length + (items.length === 1 ? ' resultado' : ' resultados');
+  tbody.innerHTML = items.map(it => {
+    const stockClass = (it.stock === 0 || it.stock === null) ? 'stock-warn' : 'stock-ok';
+    return `
+      <tr>
+        <td class="col-ordem">${it.ordem}</td>
+        <td>${it.material}</td>
+        <td class="col-familia">${it.familia || '-'}</td>
+        <td class="col-un"><span class="un-tag">${it.un || '-'}</span></td>
+        <td class="col-stock ${stockClass}">${it.stock}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function doSearch() {
+  const qCodigo = normalize(codigoInput.value);
+  const qNome = normalize(nomeInput.value);
+
+  if (!qCodigo && !qNome && !activeFamilia) {
+    table.style.display = 'none';
+    emptyState.style.display = 'block';
+    emptyState.textContent = 'Preencha um campo ou escolha uma família para pesquisar.';
+    statusLine.textContent = '';
+    return;
+  }
+
+  const filtered = DATA.filter(it => {
+    if (qCodigo && !String(it.ordem).startsWith(qCodigo)) return false;
+    if (qNome && !normalize(it.material).includes(qNome)) return false;
+    if (activeFamilia && it.familia !== activeFamilia) return false;
+    return true;
+  });
+  render(filtered);
+}
+
+function initApp() {
+  FAMILIAS = [...new Set(DATA.map(d => d.familia))].sort();
+  renderChips();
+
+  codigoInput.disabled = false;
+  nomeInput.disabled = false;
+  codigoInput.placeholder = 'Ex: 201';
+  nomeInput.placeholder = 'Ex: parafuso';
+
+  emptyState.textContent = 'Preencha um campo ou escolha uma família para pesquisar.';
+
+  codigoInput.addEventListener('input', doSearch);
+  nomeInput.addEventListener('input', doSearch);
+  clearBtn.addEventListener('click', () => {
+    codigoInput.value = '';
+    nomeInput.value = '';
+    activeFamilia = null;
+    filterChips.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    table.style.display = 'none';
+    emptyState.style.display = 'block';
+    emptyState.textContent = 'Preencha um campo ou escolha uma família para pesquisar.';
+    statusLine.textContent = '';
+    codigoInput.focus();
+  });
+}
+
+codigoInput.disabled = true;
+nomeInput.disabled = true;
+loadData();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+</script>
+</body>
+</html>
