@@ -2,7 +2,7 @@
   "name": "Armazém / Stocks",
   "short_name": "Stocks",
   "description": "Consulta de stocks municipais por código, nome ou família",
-  "start_url": "./armazem_stocks.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",

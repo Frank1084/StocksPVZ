@@ -1,6 +1,6 @@
-const CACHE_NAME = 'stocks-pvz-v2';
+const CACHE_NAME = 'stocks-pvz-v3';
 const ASSETS = [
-  './armazem_stocks.html',
+  './index.html',
   './manifest.json',
   './stock_data.csv',
   './pwa-assets/icon-192.png',
