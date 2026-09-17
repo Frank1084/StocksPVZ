@@ -243,7 +243,16 @@ let FAMILIAS = [];
 let activeFamilia = null;
 
 // Parser CSV simples com suporte a campos entre aspas (vírgulas e aspas dentro do texto)
-function parseCSV(text) {
+// e deteção automática do separador (vírgula ou ponto e vírgula, consoante o
+// programa/definições regionais usadas para exportar o ficheiro)
+function detectDelimiter(text) {
+  const firstLine = text.split(/\r?\n/, 1)[0] || '';
+  const commas = (firstLine.match(/,/g) || []).length;
+  const semicolons = (firstLine.match(/;/g) || []).length;
+  return semicolons > commas ? ';' : ',';
+}
+
+function parseCSV(text, delimiter) {
   const rows = [];
   let row = [];
   let field = '';
@@ -259,7 +268,7 @@ function parseCSV(text) {
       }
     } else {
       if (c === '"') { inQuotes = true; }
-      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === delimiter) { row.push(field); field = ''; }
       else if (c === '\r') { /* ignore */ }
       else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
       else { field += c; }
@@ -269,18 +278,27 @@ function parseCSV(text) {
   return rows.filter(r => r.length > 1 || r[0] !== '');
 }
 
+function parseStock(raw) {
+  if (raw === undefined || raw === null || raw === '') return raw;
+  // aceita tanto "1.27" como "1,27" (vírgula decimal do Excel em português)
+  const normalized = String(raw).trim().replace(',', '.');
+  const n = parseFloat(normalized);
+  return isNaN(n) ? raw : n;
+}
+
 async function loadData() {
   try {
     const res = await fetch('stock_data.csv', { cache: 'no-store' });
     const text = await res.text();
-    const rows = parseCSV(text);
+    const delimiter = detectDelimiter(text);
+    const rows = parseCSV(text, delimiter);
     rows.shift(); // remove cabeçalho
     DATA = rows.map(r => ({
       ordem: r[0],
       familia: r[1],
       material: r[2],
       num: r[3],
-      stock: isNaN(parseFloat(r[4])) ? r[4] : parseFloat(r[4]),
+      stock: parseStock(r[4]),
       ne: r[5],
       un: r[6]
     }));

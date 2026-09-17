@@ -1,4 +1,4 @@
-const CACHE_NAME = 'stocks-pvz-v3';
+const CACHE_NAME = 'stocks-pvz-v4';
 const ASSETS = [
   './index.html',
   './manifest.json',
